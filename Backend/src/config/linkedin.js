@@ -9,4 +9,4 @@ const linkedinConfig = {
   postUrl: 'https://api.linkedin.com/v2/ugcPosts',
 }
 
-module.exports = linkedinConfig
+export default linkedinConfig

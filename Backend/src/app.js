@@ -1,11 +1,13 @@
-const express = require('express')
-const cors = require('cors')
-require('dotenv').config()
+import express from 'express'
+import cors from 'cors'
+import dotenv from 'dotenv'
+dotenv.config()
 
-const authRoutes = require('./routes/authRoute')
-const socialRoutes = require('./routes/socialRoutes')
-const aiRoutes = require('./routes/aiRoutes')
-const brandRoutes = require('./routes/brandRoutes')
+import authRoutes from './routes/authRoute.js'
+import socialRoutes from './routes/socialRoutes.js'
+import aiRoutes from './routes/aiRoutes.js'
+import brandRoutes from './routes/brandRoutes.js'
+import optimizeRoutes from './routes/optimizeRoutes.js'
 
 const app = express()
 
@@ -20,8 +22,9 @@ app.use('/api/auth', authRoutes)
 app.use('/api/social', socialRoutes)
 app.use('/api/ai', aiRoutes)
 app.use('/api/brand', brandRoutes)
+app.use('/api/optimize', optimizeRoutes)
 
 // Health check
 app.get('/', (req, res) => res.send('Postify AI Server is running'))
 
-module.exports = app
+export default app

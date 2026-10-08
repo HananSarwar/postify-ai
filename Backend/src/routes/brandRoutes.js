@@ -1,10 +1,11 @@
-const express = require('express')
+import express from 'express'
+import { saveBrand, getBrand, updateBrand } from '../controllers/brandController.js'
+import { protect } from '../middleware/authMiddleware.js'
+
 const router = express.Router()
-const { saveBrand, getBrand, updateBrand } = require('../controllers/brandController')
-const { protect } = require('../middleware/authMiddleware')
 
 router.post('/save', protect, saveBrand)
 router.get('/get', protect, getBrand)
 router.put('/update', protect, updateBrand)
 
-module.exports = router
+export default router

@@ -1,8 +1,12 @@
-const Brand = require('../models/brandModel')
+import Brand from '../models/brandModel.js'
 
 // @route POST /api/brand/save
-const saveBrand = async (req, res) => {
+export const saveBrand = async (req, res) => {
   const { brandName, industry, colors, logoUrl, tone, brandDescription, targetAudience } = req.body
+
+  if (!brandName || !industry) {
+    return res.status(400).json({ message: 'brandName and industry are required' })
+  }
 
   try {
     const brand = await Brand.findOneAndUpdate(
@@ -22,12 +26,12 @@ const saveBrand = async (req, res) => {
 
     res.status(200).json({ message: 'Brand saved successfully', brand })
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message })
+    res.status(500).json({ message: 'Server error' })
   }
 }
 
 // @route GET /api/brand/get
-const getBrand = async (req, res) => {
+export const getBrand = async (req, res) => {
   try {
     const brand = await Brand.findOne({ userId: req.user._id })
     if (!brand) {
@@ -35,22 +39,25 @@ const getBrand = async (req, res) => {
     }
     res.status(200).json({ brand })
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message })
+    res.status(500).json({ message: 'Server error' })
   }
 }
 
 // @route PUT /api/brand/update
-const updateBrand = async (req, res) => {
+export const updateBrand = async (req, res) => {
   try {
     const brand = await Brand.findOneAndUpdate(
       { userId: req.user._id },
       { ...req.body },
       { new: true }
     )
+
+    if (!brand) {
+      return res.status(404).json({ message: 'No brand found' })
+    }
+
     res.status(200).json({ message: 'Brand updated successfully', brand })
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message })
+    res.status(500).json({ message: 'Server error' })
   }
 }
-
-module.exports = { saveBrand, getBrand, updateBrand }
