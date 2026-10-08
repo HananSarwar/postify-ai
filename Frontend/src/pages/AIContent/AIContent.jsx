@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import Sidebar from '../../components/layout/Sidebar'
 import TopBar from '../../components/layout/TopBar'
-import { generateCaptionAPI, generateHashtagsAPI, optimizeToneAPI } from '../../services/aiService'
+import { generateCaptionAPI } from '../../services/aiService'
+import { optimizeCaptionAPI, optimizeHashtagsAPI, analyzeContentAPI } from '../../services/optimizeService'
 
 const platforms = ['linkedin', 'instagram', 'facebook', 'twitter']
 const tones = ['formal', 'casual', 'witty', 'inspirational']
@@ -15,9 +16,10 @@ const AIContent = () => {
     language: 'English',
   })
   const [loading, setLoading] = useState(false)
+  const [optimizing, setOptimizing] = useState(false)
   const [result, setResult] = useState(null)
+  const [analysis, setAnalysis] = useState(null)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState('caption')
   const [copied, setCopied] = useState(false)
 
   const handleChange = (e) => {
@@ -39,6 +41,29 @@ const AIContent = () => {
       setError(err.response?.data?.message || 'Failed to generate. Try again!')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleOptimize = async () => {
+    if (!result) return
+    setOptimizing(true)
+    try {
+      const [captionRes, analysisRes] = await Promise.all([
+        optimizeCaptionAPI({
+          caption: result.caption,
+          platform: form.platform,
+        }),
+        analyzeContentAPI({
+          caption: result.caption,
+          platform: form.platform,
+        }),
+      ])
+      setResult({ ...result, caption: captionRes.data.optimizedCaption })
+      setAnalysis(analysisRes.data)
+    } catch (err) {
+      setError('Failed to optimize!')
+    } finally {
+      setOptimizing(false)
     }
   }
 
@@ -335,6 +360,50 @@ const AIContent = () => {
                     </div>
                   </div>
 
+                  {/* Analysis Section */}
+                  {analysis && (
+                    <div style={{
+                      background: '#222',
+                      border: '0.5px solid #2A2A2A',
+                      borderRadius: '8px',
+                      padding: '12px',
+                    }}>
+                      <div style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>
+                        ◈ Content Analysis
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                        {[
+                          { label: 'Tone', value: analysis.tone },
+                          { label: 'Sentiment', value: analysis.sentiment },
+                          { label: 'Engagement', value: `${analysis.engagementScore}/100` },
+                          { label: 'Platform Fit', value: `${analysis.platformScore}/100` },
+                        ].map((item) => (
+                          <div key={item.label} style={{
+                            background: '#1A1A1A',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            textAlign: 'center',
+                          }}>
+                            <div style={{ fontSize: '10px', color: '#888' }}>{item.label}</div>
+                            <div style={{ fontSize: '13px', color: '#FFFFFF', fontWeight: '500', textTransform: 'capitalize' }}>
+                              {item.value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {analysis.suggestions && (
+                        <div>
+                          <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Suggestions:</div>
+                          {analysis.suggestions.map((s, i) => (
+                            <div key={i} style={{ fontSize: '11px', color: '#4CAF50', marginBottom: '2px' }}>
+                              → {s}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Action Buttons */}
                   <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
                     <button
@@ -350,6 +419,21 @@ const AIContent = () => {
                         cursor: 'pointer',
                       }}>
                       {copied ? '✓ Copied!' : '⎘ Copy'}
+                    </button>
+                    <button
+                      onClick={handleOptimize}
+                      disabled={optimizing}
+                      style={{
+                        flex: 1,
+                        background: '#222',
+                        border: '0.5px solid #2A2A2A',
+                        color: optimizing ? '#555' : '#FFFFFF',
+                        borderRadius: '8px',
+                        padding: '9px',
+                        fontSize: '12px',
+                        cursor: optimizing ? 'not-allowed' : 'pointer',
+                      }}>
+                      {optimizing ? '⏳ Optimizing...' : '◈ Optimize'}
                     </button>
                     <button
                       onClick={handleGenerate}
